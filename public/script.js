@@ -11,7 +11,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const formTitle = document.querySelector("#formTitle"); 
     const mhsTableBody = document.querySelector("#mhsTableBody"); 
     const alertMessage = document.querySelector("#alertMessage"); 
- 
+
+    const searchInput = document.querySelector("#searchInput");
+    const totalCounter = document.querySelector("#totalCounter");
+
     let listMahasiswa = []; 
  
     // Fungsi Pembantu Notifikasi Alert 
@@ -27,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try { 
             const res = await fetch("/api/mahasiswa"); 
             listMahasiswa = await res.json(); 
+            totalCounter.textContent = `Total Mahasiswa Terdaftar: ${listMahasiswa.length} Orang`;
             renderTable(listMahasiswa); 
         } catch (err) { 
             showAlert("Gagal memuat data dari server backend", "error"); 
@@ -55,20 +59,37 @@ document.addEventListener("DOMContentLoaded", () => {
             mhsTableBody.appendChild(tr); 
         }); 
     }; 
+
+    searchInput.addEventListener("input", (e) => {
+        const keyword = e.target.value.toLowerCase().trim();
+        const filteredData = listMahasiswa.filter((mhs) => 
+            mhs.nama.toLowerCase().includes(keyword) || 
+            mhs.nim.toLowerCase().includes(keyword)
+        );
+        renderTable(filteredData);
+    });
  
     // 3. CREATE & UPDATE: Submit Formulir 
     mhsForm.addEventListener("submit", async (e) => { 
         e.preventDefault(); 
  
-        const payload = { 
-            nim: nimInput.value.trim(), 
-            nama: namaInput.value.trim(), 
-            jurusan: jurusanInput.value, 
-            email: emailInput.value.trim() 
-        }; 
- 
+        const nimBaru = payload.nim;
         const id = mhsIdInput.value; 
         const isEdit = Boolean(id); 
+        const isDuplicate = listMahasiswa.some((mhs) => mhs.nim === nimBaru && String(mhs.id) !== String(id));
+
+        if (isDuplicate) {
+            showAlert("NIM sudah terdaftar!", "error");
+            return;
+        }
+
+        const payload = {
+            nim: nimBaru,
+            nama: namaInput.value.trim(),
+            jurusan: jurusanInput.value,
+            email: emailInput.value.trim()
+        };
+
         const url = isEdit ? `/api/mahasiswa/${id}` : "/api/mahasiswa"; 
         const method = isEdit ? "PUT" : "POST"; 
  

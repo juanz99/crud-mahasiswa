@@ -21,8 +21,6 @@ db.connect((err) => {
     console.log("Terhubung ke database MySQL!");
 });
 
-
-
 app.get("/api/mahasiswa", (req, res) => {
     db.query("SELECT * FROM mahasiswa ORDER BY id DESC", (err, results) => {
         if (err) return res.status(500).json({
